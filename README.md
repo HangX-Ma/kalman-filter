@@ -37,6 +37,7 @@ $$
 
 
 The first demo is a linear model, in which the object has a constant velocity. The measured variable is `position`. The process noise is $w \sim N(0, \sigma_{p})$ and the measurement noise is $v \sim N(0, \sigma_{v})$.
+
 $$
 \begin{equation}
     \begin{bmatrix}
