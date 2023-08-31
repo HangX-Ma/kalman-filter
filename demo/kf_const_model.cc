@@ -33,11 +33,9 @@ int main (int argc,char *argv[]) {
     std::vector<double> zero_pos(N, 0);
     std::vector<double> true_pos(N);
     std::vector<double> true_vel(N);
-    std::vector<double> true_acc(N);
 
     std::vector<double> measured_pos(N);
     std::vector<double> estimated_pos(N);
-    std::vector<double> predict_pos(N);
 
     // Pseudo random numbers generator
     double measurement_mu = 0.0;      // Mean
@@ -113,7 +111,7 @@ int main (int argc,char *argv[]) {
     plt::legend();
     plt::grid(true, {{"linestyle", "--"}});
     plt::xlim(0.0, simulation_time - system_dt);
-    plt::save("assets/kalman_filter.png");
+    plt::save("assets/kalman_filter_const_model.png");
     plt::show();
 #endif
 

@@ -71,10 +71,19 @@ else()
   target_compile_definitions(matplotlib_cpp INTERFACE WITHOUT_NUMPY)
 endif()
 
-# target
+# KF const mode target
 add_executable(kf_const_model ${CMAKE_SOURCE_DIR}/demo/kf_const_model.cc  kalman_filter.h)
 target_link_libraries(kf_const_model  matplotlib_cpp)
 target_include_directories(kf_const_model
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
+        ${CMAKE_SOURCE_DIR}/library/eigen-3.4.0
+)
+# KF acceleration noise mode target
+add_executable(kf_acc_noise_model ${CMAKE_SOURCE_DIR}/demo/kf_acc_noise_model.cc  kalman_filter.h)
+target_link_libraries(kf_acc_noise_model  matplotlib_cpp)
+target_include_directories(kf_acc_noise_model
     PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp

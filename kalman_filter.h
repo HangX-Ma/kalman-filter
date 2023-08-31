@@ -50,6 +50,13 @@ class KalmanFilter {
             u_ = u;
         }
 
+        void setProcessCovariance(const Eigen::MatrixXd& Q) {
+            if (Q.size() != Q_.size())
+            throw std::length_error("Incorrect dimensions of process cov. matrix");
+            else
+            Q_ = Q;
+        }
+
         Eigen::VectorXd& getPredict(void) { return x_pred_; };
         Eigen::VectorXd& getEstimate(void) { return x_est_; };
 
