@@ -35,7 +35,6 @@ $$
 \end{equation}
 $$
 
-
 The first demo is a linear model, in which the object has a constant velocity. The measured variable is `position`. The process noise is $w \sim N(0, \sigma_{p})$ and the measurement noise is $v \sim N(0, \sigma_{v})$.
 
 $$
@@ -78,12 +77,18 @@ $$
 
 The second demo simulate a pedestrian's movement on coordination `u` and `v` (or `x` and `y`). The difference with the previous case is that this case take pedestrian's potential acceleration into account. But the acceleration is included in process noise. This case realize the idea from [this site](https://blog.csdn.net/luteresa/article/details/104226258).
 
-<div align="center">
-    <img src="assets/kalman_filter_acc_noise_model.png" alt="Kalman Filter: Linear model with acceleration noise, HangX-Ma" width=600 />
-    <br>
-    <font size="2" color="#999"><u>Kalman Filter: Linear model with acceleration noise, HangX-Ma</u></font>
-    <br></br>
-</div>
+> A target switch situation is included in this case as well. _**Chi-square test**_ is used to deal with it.
+
+<table>
+<tr>
+    <td><img src="assets/kalman_filter_acc_noise_model.png" alt="Kalman Filter: Linear model with Acc noise, HangX-Ma" width=600 /></td>
+    <td><img src="assets/kalman_filter_acc_noise_model_chi-square.png" alt="Kalman Filter: Linear model with Acc noise and chi-square test, HangX-Ma" width=600 /></td>
+</tr>
+<tr>
+    <td align="center"><font size="2" color="#999"><u>Kalman Filter: Linear model with acceleration noise, HangX-Ma</u></font></td>
+    <td align="center"><font size="2" color="#999"><u>Kalman Filter: Linear model with Acc noise and chi-square test, HangX-Ma</u></font></td>
+</tr>
+</table>
 
 ## License
 

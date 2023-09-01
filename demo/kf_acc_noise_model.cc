@@ -53,7 +53,7 @@ int main (int argc,char *argv[]) {
     std::default_random_engine generator;
     std::normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
     std::normal_distribution<double> process_noise(process_mu, process_sigma);
-// Preparing KF
+    // Preparing KF
     // x = [Pu, Pv, Vu, Vv]^T
     Eigen::Matrix4d A; /* 4x4 */
     A << 1.0, 0.0, system_dt, 0.0,
@@ -67,6 +67,9 @@ int main (int argc,char *argv[]) {
     Eigen::Matrix<double, 2, 4> H; /* 2x4 */
     H << 1.0, 0.0, 0.0, 0.0,
          0.0, 1.0, 0.0, 0.0;
+
+    Eigen::Matrix4d P0;
+    P0.setIdentity();
 
     // The process and measurement covariances are sort of tunning parameters
     Eigen::Matrix4d Q; /* 4x4 */
@@ -93,6 +96,12 @@ int main (int argc,char *argv[]) {
     R << 0.01, 0.0,
          0.0,  0.01;
 
+    Eigen::Matrix<double, 4, 2> G; /* 4x2 */
+    G << 1, 0,
+         0, 1,
+         0, 0,
+         0, 0;
+
     kf::KalmanFilter filter(A, B, H, Q, R);
 
     // Initial values (unknown by KF)
@@ -107,17 +116,28 @@ int main (int argc,char *argv[]) {
     measured_pos_v[0] = 0.0;
     estimated_pos_v[0] = 0.0;
 
-
     Eigen::VectorXd z(2); /* 2x1 */
+    Eigen::VectorXd e(2); /* 2x1 */
+    double l_threshold = 20.0;
+
     // Simulation
     for (size_t i = 1; i < N; ++i) {
         time[i] = i * system_dt;
 
-        true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * system_dt;
-        true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+        if (i == N / 2) {
+            // switch target and set new target state
+            true_vel_u[i] = 0.3;
+            true_pos_u[i] = 3.0;
 
-        true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * system_dt;
-        true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+            true_vel_v[i] = 0.3;
+            true_pos_v[i] = 3.0;
+        } else {
+            true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * system_dt;
+            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+
+            true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * system_dt;
+            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+        }
 
         // New measurement comes once every M samples of the system
         if (i % M == 1) {
@@ -132,6 +152,19 @@ int main (int argc,char *argv[]) {
         z(1) = measured_pos_v[i];
 
         filter.predict();
+
+        /* chi-square test */
+        e = z - H * filter.getPredict();
+        double r =  e.transpose() * filter.getInnovationCovariance().inverse() * e;
+        if (r > l_threshold) {
+            printf("[Kalman Filter]: Switch target! threshold: %.3f, real: %.3f\n", l_threshold, r);
+            filter.setEstimateCovariance(P0);
+            filter.setEstimate(G * z);
+            estimated_pos_u[i] = z(0);
+            estimated_pos_v[i] = z(1);
+            continue;
+        }
+
         filter.update(z);
 
         estimated_pos_u[i] = filter.getEstimate()(0);
@@ -153,7 +186,7 @@ int main (int argc,char *argv[]) {
     plt::legend();
     plt::grid(true, {{"linestyle", "--"}});
     plt::xlim(0.0, simulation_time - system_dt);
-    plt::save("assets/kalman_filter_acc_noise_model.png");
+    plt::save("assets/kalman_filter_acc_noise_model_chi-square.png");
     plt::show();
 #endif
 
