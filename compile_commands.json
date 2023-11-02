@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/Contour/kalman-filter/build",
+  "command": "/usr/bin/clang++-14 -DKF_USE_MATPLOTLIB -I/home/Contour/kalman-filter -I/home/Contour/kalman-filter/library/matplotlib-cpp -I/home/Contour/kalman-filter/library/eigen-3.4.0 -I/home/Contour/kalman-filter/examples -isystem /usr/include/python3.10 -isystem /home/Contour/.local/lib/python3.10/site-packages/numpy/core/include -Og -g -Wall -Wextra -std=c++17 -o CMakeFiles/kf_const_model.dir/demo/kf_const_model.cc.o -c /home/Contour/kalman-filter/demo/kf_const_model.cc",
+  "file": "/home/Contour/kalman-filter/demo/kf_const_model.cc"
+},
+{
+  "directory": "/home/Contour/kalman-filter/build",
+  "command": "/usr/bin/clang++-14 -DKF_USE_MATPLOTLIB -I/home/Contour/kalman-filter -I/home/Contour/kalman-filter/library/matplotlib-cpp -I/home/Contour/kalman-filter/library/eigen-3.4.0 -I/home/Contour/kalman-filter/examples -isystem /usr/include/python3.10 -isystem /home/Contour/.local/lib/python3.10/site-packages/numpy/core/include -Og -g -Wall -Wextra -std=c++17 -o CMakeFiles/kf_acc_noise_model.dir/demo/kf_acc_noise_model.cc.o -c /home/Contour/kalman-filter/demo/kf_acc_noise_model.cc",
+  "file": "/home/Contour/kalman-filter/demo/kf_acc_noise_model.cc"
+},
+{
+  "directory": "/home/Contour/kalman-filter/build",
+  "command": "/usr/bin/clang++-14 -DKF_USE_MATPLOTLIB -I/home/Contour/kalman-filter -I/home/Contour/kalman-filter/demo -I/home/Contour/kalman-filter/library/matplotlib-cpp -I/home/Contour/kalman-filter/library/eigen-3.4.0 -I/home/Contour/kalman-filter/examples -isystem /usr/include/python3.10 -isystem /home/Contour/.local/lib/python3.10/site-packages/numpy/core/include -Og -g -Wall -Wextra -std=c++17 -o CMakeFiles/kf_vs_const_model.dir/demo/kf_vs_const_model.cc.o -c /home/Contour/kalman-filter/demo/kf_vs_const_model.cc",
+  "file": "/home/Contour/kalman-filter/demo/kf_vs_const_model.cc"
+}
+]
