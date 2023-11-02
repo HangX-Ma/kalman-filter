@@ -6,11 +6,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set (CMAKE_C_COMPILER "E:/mingw64/bin/gcc.exe")
-set (CMAKE_CXX_COMPILER "E:/mingw64/bin/g++.exe")
+set(CMAKE_CXX_COMPILER "E:/mingw64/bin/g++.exe")
 
 # generate a compile commands file as complete database for vim-YouCompleteMe or some other similar tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_custom_target(
+    copy-compile-commands ALL
+    ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/compile_commands.json
+    ${CMAKE_CURRENT_LIST_DIR}
+)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "Please select another folder to build the project.")
@@ -57,6 +62,8 @@ target_compile_features(matplotlib_cpp INTERFACE
 )
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+include_directories(${Python3_INCLUDE_DIR})
 target_link_libraries(matplotlib_cpp INTERFACE
   Python3::Python
   Python3::Module
@@ -72,7 +79,7 @@ else()
 endif()
 
 # KF const mode target
-add_executable(kf_const_model ${CMAKE_SOURCE_DIR}/demo/kf_const_model.cc  kalman_filter.h)
+add_executable(kf_const_model ${CMAKE_SOURCE_DIR}/demo/kf_const_model.cc kalman_filter.h)
 target_link_libraries(kf_const_model  matplotlib_cpp)
 target_include_directories(kf_const_model
     PRIVATE
@@ -80,12 +87,24 @@ target_include_directories(kf_const_model
         ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
         ${CMAKE_SOURCE_DIR}/library/eigen-3.4.0
 )
+
 # KF acceleration noise mode target
-add_executable(kf_acc_noise_model ${CMAKE_SOURCE_DIR}/demo/kf_acc_noise_model.cc  kalman_filter.h)
+add_executable(kf_acc_noise_model ${CMAKE_SOURCE_DIR}/demo/kf_acc_noise_model.cc kalman_filter.h)
 target_link_libraries(kf_acc_noise_model  matplotlib_cpp)
 target_include_directories(kf_acc_noise_model
     PRIVATE
         ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
+        ${CMAKE_SOURCE_DIR}/library/eigen-3.4.0
+)
+
+# KF Visual Servo
+add_executable(kf_vs_const_model ${CMAKE_SOURCE_DIR}/demo/kf_vs_const_model.cc kalman_filter.h)
+target_link_libraries(kf_vs_const_model matplotlib_cpp)
+target_include_directories(kf_vs_const_model
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/demo
         ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
         ${CMAKE_SOURCE_DIR}/library/eigen-3.4.0
 )

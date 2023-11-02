@@ -1,0 +1,20 @@
+[
+{
+  "directory": "D:/Desktop/PhotoelectricTracker/kalman-filter/build",
+  "command": "E:\\mingw64\\bin\\g++.exe -DKF_USE_MATPLOTLIB @CMakeFiles/kf_const_model.dir/includes_CXX.rsp -std=c++17 -Og -g -Wall -Wextra -o CMakeFiles\\kf_const_model.dir\\demo\\kf_const_model.cc.obj -c D:\\Desktop\\PhotoelectricTracker\\kalman-filter\\demo\\kf_const_model.cc",
+  "file": "D:/Desktop/PhotoelectricTracker/kalman-filter/demo/kf_const_model.cc",
+  "output": "CMakeFiles/kf_const_model.dir/demo/kf_const_model.cc.obj"
+},
+{
+  "directory": "D:/Desktop/PhotoelectricTracker/kalman-filter/build",
+  "command": "E:\\mingw64\\bin\\g++.exe -DKF_USE_MATPLOTLIB @CMakeFiles/kf_acc_noise_model.dir/includes_CXX.rsp -std=c++17 -Og -g -Wall -Wextra -o CMakeFiles\\kf_acc_noise_model.dir\\demo\\kf_acc_noise_model.cc.obj -c D:\\Desktop\\PhotoelectricTracker\\kalman-filter\\demo\\kf_acc_noise_model.cc",
+  "file": "D:/Desktop/PhotoelectricTracker/kalman-filter/demo/kf_acc_noise_model.cc",
+  "output": "CMakeFiles/kf_acc_noise_model.dir/demo/kf_acc_noise_model.cc.obj"
+},
+{
+  "directory": "D:/Desktop/PhotoelectricTracker/kalman-filter/build",
+  "command": "E:\\mingw64\\bin\\g++.exe -DKF_USE_MATPLOTLIB @CMakeFiles/kf_vs_const_model.dir/includes_CXX.rsp -std=c++17 -Og -g -Wall -Wextra -o CMakeFiles\\kf_vs_const_model.dir\\demo\\kf_vs_const_model.cc.obj -c D:\\Desktop\\PhotoelectricTracker\\kalman-filter\\demo\\kf_vs_const_model.cc",
+  "file": "D:/Desktop/PhotoelectricTracker/kalman-filter/demo/kf_vs_const_model.cc",
+  "output": "CMakeFiles/kf_vs_const_model.dir/demo/kf_vs_const_model.cc.obj"
+}
+]

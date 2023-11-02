@@ -5,7 +5,6 @@
  * The system is described with equation x(k) = A * x(k-1) + B * u(k-1)
  * The output is described with equation z(k) = H * x(k)
 */
-#include <iostream>
 #include <string>
 #include <vector>
 #include <random>
