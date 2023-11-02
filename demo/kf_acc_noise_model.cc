@@ -5,11 +5,11 @@
  *
  * The system is described with equation x(k) = A * x(k-1) + B * u(k-1)
  * The output is described with equation z(k) = H * x(k)
-*/
+ */
+#include <cmath>
+#include <random>
 #include <string>
 #include <vector>
-#include <random>
-#include <cmath>
 
 #include "kalman_filter.h"
 #include "matplotlibcpp.h"
@@ -17,14 +17,14 @@
 namespace plt = matplotlibcpp;
 
 // Time and samples
-const double system_dt = 0.01;        // The system works with rate of 100 Hz
-const double measurement_dt = 0.1;    // The measurements come with rate of 10 Hz
-const double simulation_time = 10;    // The time of simulation is 10 s
+const double system_dt = 0.01;     // The system works with rate of 100 Hz
+const double measurement_dt = 0.1; // The measurements come with rate of 10 Hz
+const double simulation_time = 10; // The time of simulation is 10 s
 
-const int N = static_cast<int>(simulation_time / system_dt);    // simulation duration
-const int M = static_cast<int>(measurement_dt / system_dt);     // measurement duration
+const int N = static_cast<int>(simulation_time / system_dt); // simulation duration
+const int M = static_cast<int>(measurement_dt / system_dt);  // measurement duration
 
-int main (int argc,char *argv[]) {
+int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 
@@ -43,15 +43,16 @@ int main (int argc,char *argv[]) {
     std::vector<double> estimated_pos_v(N);
 
     // Pseudo random numbers generator
-    double measurement_mu = 0.0;      // Mean
-    double measurement_sigma = 0.05;  // Standard deviation
+    double measurement_mu = 0.0;     // Mean
+    double measurement_sigma = 0.05; // Standard deviation
 
-    double process_mu = 0.0;          // Mean
-    double process_sigma = 2.0;       // Standard deviation
+    double process_mu = 0.0;    // Mean
+    double process_sigma = 2.0; // Standard deviation
 
     std::default_random_engine generator;
     std::normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
     std::normal_distribution<double> process_noise(process_mu, process_sigma);
+    // clang-format off
     // Preparing KF
     // x = [Pu, Pv, Vu, Vv]^T
     Eigen::Matrix4d A; /* 4x4 */
@@ -101,6 +102,7 @@ int main (int argc,char *argv[]) {
          0, 0,
          0, 0;
 
+    // clang-format on
     kf::KalmanFilter filter(A, B, H, Q, R);
 
     // Initial values (unknown by KF)
@@ -132,10 +134,12 @@ int main (int argc,char *argv[]) {
             true_pos_v[i] = 3.0;
         } else {
             true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * system_dt;
-            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * system_dt +
+                            0.5 * process_noise(generator) * dt_2;
 
             true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * system_dt;
-            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * system_dt + 0.5 * process_noise(generator) * dt_2;
+            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * system_dt +
+                            0.5 * process_noise(generator) * dt_2;
         }
 
         // New measurement comes once every M samples of the system
@@ -154,7 +158,7 @@ int main (int argc,char *argv[]) {
 
         /* chi-square test */
         e = z - H * filter.getPredict();
-        double r =  e.transpose() * filter.getInnovationCovariance().inverse() * e;
+        double r = e.transpose() * filter.getInnovationCovariance().inverse() * e;
         if (r > l_threshold) {
             printf("[Kalman Filter]: Switch target! threshold: %.3f, real: %.3f\n", l_threshold, r);
             filter.setEstimateCovariance(P0);

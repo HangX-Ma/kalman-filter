@@ -4,10 +4,10 @@
  *
  * The system is described with equation x(k) = A * x(k-1) + B * u(k-1)
  * The output is described with equation z(k) = H * x(k)
-*/
+ */
+#include <random>
 #include <string>
 #include <vector>
-#include <random>
 
 #include "kalman_filter.h"
 #include "matplotlibcpp.h"
@@ -15,14 +15,14 @@
 namespace plt = matplotlibcpp;
 
 // Time and samples
-const double system_dt = 0.01;        // The system works with rate of 100 Hz
-const double measurement_dt = 0.1;    // The measurements come with rate of 10 Hz
-const double simulation_time = 10;    // The time of simulation is 10 s
+const double system_dt = 0.01;     // The system works with rate of 100 Hz
+const double measurement_dt = 0.1; // The measurements come with rate of 10 Hz
+const double simulation_time = 10; // The time of simulation is 10 s
 
-const int N = static_cast<int>(simulation_time / system_dt);    // simulation duration
-const int M = static_cast<int>(measurement_dt / system_dt);     // measurement duration
+const int N = static_cast<int>(simulation_time / system_dt); // simulation duration
+const int M = static_cast<int>(measurement_dt / system_dt);  // measurement duration
 
-int main (int argc,char *argv[]) {
+int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 
@@ -37,16 +37,17 @@ int main (int argc,char *argv[]) {
     std::vector<double> estimated_pos(N);
 
     // Pseudo random numbers generator
-    double measurement_mu = 0.0;      // Mean
-    double measurement_sigma = 0.02;  // Standard deviation
+    double measurement_mu = 0.0;     // Mean
+    double measurement_sigma = 0.02; // Standard deviation
 
-    double process_mu = 0.0;          // Mean
-    double process_sigma = 0.005;      // Standard deviation
+    double process_mu = 0.0;      // Mean
+    double process_sigma = 0.005; // Standard deviation
 
     std::default_random_engine generator;
     std::normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
     std::normal_distribution<double> process_noise(process_mu, process_sigma);
 
+    // clang-format off
     // Preparing KF
     Eigen::Matrix2d A; /* 2x2 */
     A << 1.0, system_dt,
@@ -65,6 +66,7 @@ int main (int argc,char *argv[]) {
 
     Eigen::MatrixXd R(1, 1); /* 1x1 */
     R << 1.0;
+    // clang-format on
 
     kf::KalmanFilter filter(A, B, H, Q, R);
 
