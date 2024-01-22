@@ -10,7 +10,8 @@
 #define __KALMAN_FILTER__H__
 
 
-#include "Eigen/Eigen"
+#include <Eigen/Eigen>
+#include <fmt/core.h>
 
 namespace kf {
 
@@ -24,14 +25,11 @@ class KalmanFilter {
          *   R - Measurement noise covariance
          *   P - Estimate error covariance
          */
-        KalmanFilter(const Eigen::MatrixXd& A,
-                     const Eigen::MatrixXd& B,
-                     const Eigen::MatrixXd& H,
-                     const Eigen::MatrixXd& Q,
-                     const Eigen::MatrixXd& R)
+      KalmanFilter(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &H,
+                   const Eigen::MatrixXd &Q, const Eigen::MatrixXd &R, const Eigen::MatrixXd &P)
             : A_(A), B_(B), H_(H),
               l_(B_.cols()), m_(H_.rows()), n_(A_.rows()),
-              Q_(Q), R_(R)
+              P_(P), P0_(P), Q_(Q), R_(R)
         {
             K_.resize(n_, m_);
             I_.resize(n_, n_);
@@ -46,34 +44,46 @@ class KalmanFilter {
             K_.setZero();
             I_.setIdentity();
 
-            P_.setIdentity();
             S_.setIdentity();
+        }
+
+        void init(const Eigen::VectorXd &x0) {
+            if (x0.size() != x_est_.size()) {
+                throw std::length_error(fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
+            }
+            x_est_ = x0;
+            P_ = P0_;
+        }
+
+        void init() {
+            x_est_.setZero();
+            P_ = P0_;
         }
 
         void setEstimate(const Eigen::VectorXd & x_est) {
             if (x_est.size() != x_est_.size()) {
-                throw std::length_error("Incorrect dimensions of estimated state vector");
+                throw std::length_error(fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
             }
             x_est_ = x_est;
         }
 
         void setInput(const Eigen::VectorXd& u) {
             if (u.size() != u_.size()) {
-                throw std::length_error("Incorrect dimensions of input vector");
+                throw std::length_error(fmt::format("Incorrect dimensions of input vector in {}", __func__));
             }
             u_ = u;
         }
 
         void setEstimateCovariance(const Eigen::MatrixXd& P) {
             if (P.size() != P_.size()) {
-                throw std::length_error("Incorrect dimensions of estimate cov. matrix");
+                throw std::length_error(fmt::format("Incorrect dimensions of estimate cov. matrix in {}", __func__));
             }
             P_ = P;
         }
 
         void setProcessCovariance(const Eigen::MatrixXd& Q) {
             if (Q.size() != Q_.size()) {
-                throw std::length_error("Incorrect dimensions of process cov. matrix");
+                throw std::length_error(fmt::format("Incorrect dimensions of process cov. matrix in {}", __func__));
             }
             Q_ = Q;
         }
@@ -142,6 +152,7 @@ class KalmanFilter {
 
         // Covariance matrices:
         Eigen::MatrixXd P_; // estimate, n x n
+        Eigen::MatrixXd P0_; // initial estimate value, n x n
         Eigen::MatrixXd Q_; // process noise, n x n
         Eigen::MatrixXd R_; // measurement noise, m x m
         Eigen::MatrixXd S_; // innovation, m x m

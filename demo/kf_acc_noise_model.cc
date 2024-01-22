@@ -17,16 +17,15 @@
 namespace plt = matplotlibcpp;
 
 // Time and samples
-const double system_dt = 0.01;     // The system works with rate of 100 Hz
-const double measurement_dt = 0.1; // The measurements come with rate of 10 Hz
-const double simulation_time = 10; // The time of simulation is 10 s
+constexpr double SYSTEM_DT = 0.01;     // The system works with rate of 100 Hz
+constexpr double MEASUREMENT_DT = 0.1; // The measurements come with rate of 10 Hz
+constexpr double SIMULATION_TIME = 10; // The time of simulation is 10 s
 
-const int N = static_cast<int>(simulation_time / system_dt); // simulation duration
-const int M = static_cast<int>(measurement_dt / system_dt);  // measurement duration
+constexpr int N = static_cast<int>(SIMULATION_TIME / SYSTEM_DT); // simulation duration
+constexpr int M = static_cast<int>(MEASUREMENT_DT / SYSTEM_DT);  // measurement duration
 
-int main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+int main([[maybe_unused]]int argc,
+         [[maybe_unused]]char *argv[]) {
 
     // Buffers for plots
     std::vector<double> time(N);
@@ -56,8 +55,8 @@ int main(int argc, char *argv[]) {
     // Preparing KF
     // x = [Pu, Pv, Vu, Vv]^T
     Eigen::Matrix4d A; /* 4x4 */
-    A << 1.0, 0.0, system_dt, 0.0,
-         0.0, 1.0, 0.0, system_dt,
+    A << 1.0, 0.0, SYSTEM_DT, 0.0,
+         0.0, 1.0, 0.0, SYSTEM_DT,
          0.0, 0.0, 1.0, 0.0,
          0.0, 0.0, 0.0, 1.0;
 
@@ -75,9 +74,9 @@ int main(int argc, char *argv[]) {
     Eigen::Matrix4d Q; /* 4x4 */
     double sigma_au_2 = 0.64;
     double sigma_av_2 = 0.64;
-    double dt_2 = pow(system_dt, 2);
-    double dt_3 = pow(system_dt, 3);
-    double dt_4 = pow(system_dt, 4);
+    double dt_2 = pow(SYSTEM_DT, 2);
+    double dt_3 = pow(SYSTEM_DT, 3);
+    double dt_4 = pow(SYSTEM_DT, 4);
 
     double q11 = dt_4 * sigma_au_2 / 4;
     double q13 = dt_3 * sigma_au_2 / 2;
@@ -103,7 +102,8 @@ int main(int argc, char *argv[]) {
          0, 0;
 
     // clang-format on
-    kf::KalmanFilter filter(A, B, H, Q, R);
+    kf::KalmanFilter filter(A, B, H, Q, R, P0);
+    filter.init();
 
     // Initial values (unknown by KF)
     time[0] = 0.0;
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 
     // Simulation
     for (size_t i = 1; i < N; ++i) {
-        time[i] = i * system_dt;
+        time[i] = i * SYSTEM_DT;
 
         if (i == N / 2) {
             // switch target and set new target state
@@ -133,12 +133,12 @@ int main(int argc, char *argv[]) {
             true_vel_v[i] = 0.3;
             true_pos_v[i] = 3.0;
         } else {
-            true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * system_dt;
-            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * system_dt +
+            true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * SYSTEM_DT;
+            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * SYSTEM_DT +
                             0.5 * process_noise(generator) * dt_2;
 
-            true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * system_dt;
-            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * system_dt +
+            true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * SYSTEM_DT;
+            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * SYSTEM_DT +
                             0.5 * process_noise(generator) * dt_2;
         }
 
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
     plt::named_plot("Estimate: v", time, estimated_pos_v, "-");
     plt::legend();
     plt::grid(true, {{"linestyle", "--"}});
-    plt::xlim(0.0, simulation_time - system_dt);
+    plt::xlim(0.0, SIMULATION_TIME - SYSTEM_DT);
     plt::save("assets/kalman_filter_acc_noise_model_chi-square.png");
     plt::show();
 #endif

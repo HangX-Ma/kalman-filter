@@ -15,16 +15,15 @@
 namespace plt = matplotlibcpp;
 
 // Time and samples
-const double system_dt = 0.01;     // The system works with rate of 100 Hz
-const double measurement_dt = 0.1; // The measurements come with rate of 10 Hz
-const double simulation_time = 10; // The time of simulation is 10 s
+constexpr double SYSTEM_DT = 0.01;     // The system works with rate of 100 Hz
+constexpr double MEASUREMENT_DT = 0.1; // The measurements come with rate of 10 Hz
+constexpr double SIMULATION_TIME = 10; // The time of simulation is 10 s
 
-const int N = static_cast<int>(simulation_time / system_dt); // simulation duration
-const int M = static_cast<int>(measurement_dt / system_dt);  // measurement duration
+constexpr int N = static_cast<int>(SIMULATION_TIME / SYSTEM_DT); // simulation duration
+constexpr int M = static_cast<int>(MEASUREMENT_DT / SYSTEM_DT);  // measurement duration
 
-int main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+int main([[maybe_unused]]int argc,
+         [[maybe_unused]]char *argv[]) {
 
     // Buffers for plots
     std::vector<double> time(N);
@@ -50,7 +49,7 @@ int main(int argc, char *argv[]) {
     // clang-format off
     // Preparing KF
     Eigen::Matrix2d A; /* 2x2 */
-    A << 1.0, system_dt,
+    A << 1.0, SYSTEM_DT,
          0.0, 1.0;
 
     Eigen::Vector2d B;
@@ -66,9 +65,13 @@ int main(int argc, char *argv[]) {
 
     Eigen::MatrixXd R(1, 1); /* 1x1 */
     R << 1.0;
+
+    Eigen::Matrix2d P0;
+    P0.setIdentity();
     // clang-format on
 
-    kf::KalmanFilter filter(A, B, H, Q, R);
+    kf::KalmanFilter filter(A, B, H, Q, R, P0);
+    filter.init();
 
     // Initial values (unknown by KF)
     time[0] = 0.0;
@@ -81,10 +84,10 @@ int main(int argc, char *argv[]) {
     Eigen::VectorXd z(1); /* 1x1 */
     // Simulation
     for (size_t i = 1; i < N; ++i) {
-        time[i] = i * system_dt;
+        time[i] = i * SYSTEM_DT;
 
         true_vel[i] = true_vel[i - 1] + process_noise(generator);
-        true_pos[i] = true_pos[i - 1] + true_vel[i] * system_dt;
+        true_pos[i] = true_pos[i - 1] + true_vel[i] * SYSTEM_DT;
 
         // New measurement comes once every M samples of the system
         if (i % M == 1) {
@@ -111,7 +114,7 @@ int main(int argc, char *argv[]) {
     plt::named_plot("Estimate", time, estimated_pos, "-");
     plt::legend();
     plt::grid(true, {{"linestyle", "--"}});
-    plt::xlim(0.0, simulation_time - system_dt);
+    plt::xlim(0.0, SIMULATION_TIME - SYSTEM_DT);
     plt::save("assets/kalman_filter_const_model.png");
     plt::show();
 #endif
