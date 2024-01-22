@@ -11,6 +11,7 @@
 
 
 #include <Eigen/Eigen>
+#include <utility>
 #include <fmt/core.h>
 
 namespace kf {
@@ -25,11 +26,11 @@ class KalmanFilter {
          *   R - Measurement noise covariance
          *   P - Estimate error covariance
          */
-      KalmanFilter(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &H,
-                   const Eigen::MatrixXd &Q, const Eigen::MatrixXd &R, const Eigen::MatrixXd &P)
-            : A_(A), B_(B), H_(H),
+      KalmanFilter(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd H,
+                   Eigen::MatrixXd Q, Eigen::MatrixXd R, const Eigen::MatrixXd &P)
+            : A_(std::move(A)), B_(std::move(B)), H_(std::move(H)),
               l_(B_.cols()), m_(H_.rows()), n_(A_.rows()),
-              P_(P), P0_(P), Q_(Q), R_(R)
+              P_(P), P0_(P), Q_(std::move(Q)), R_(std::move(R))
         {
             K_.resize(n_, m_);
             I_.resize(n_, n_);
@@ -92,7 +93,7 @@ class KalmanFilter {
          *
          * @returns the current estimate covariance matrix P
          */
-        const Eigen::MatrixXd& getEstimateCovariance(void) const { return P_; }
+        const Eigen::MatrixXd& getEstimateCovariance() const { return P_; }
 
 
         /** @brief Innovation covariance matrix getter
@@ -102,17 +103,17 @@ class KalmanFilter {
          *
          * @returns the current innovation covariance matrix S
          */
-        const Eigen::MatrixXd& getInnovationCovariance(void) const { return S_; }
+        const Eigen::MatrixXd& getInnovationCovariance() const { return S_; }
 
-        const Eigen::VectorXd& getPredict(void) const { return x_pred_; };
-        const Eigen::VectorXd& getEstimate(void) const { return x_est_; };
+        const Eigen::VectorXd& getPredict() const { return x_pred_; };
+        const Eigen::VectorXd& getEstimate() const { return x_est_; };
 
         /** @brief Performs the KF prediction step
          *
          * Calculates the state predicted from the model and updates the estimate
          * error covariance matrix.
          */
-        void predict(void) {
+        void predict() {
             x_pred_ = A_ * x_est_ + B_ * u_;
             P_ = A_ * P_ * A_.transpose() + Q_;
             // prepare for 'update'
@@ -130,7 +131,7 @@ class KalmanFilter {
          * state estimate, and updates estimate error covariance as well as innovation
          * covariance.
          */
-        void update(const Eigen::VectorXd z) {
+        void update(const Eigen::VectorXd& z) {
             K_ = P_ * H_.transpose() * S_.inverse();
             x_est_ = x_pred_ + K_ * (z - H_ * x_pred_);
             P_ = (I_ - K_ * H_) * P_;
@@ -164,6 +165,6 @@ class KalmanFilter {
         Eigen::VectorXd x_pred_, x_est_;
 };
 
-}
+}  // namespace kf
 
 #endif  //!__KALMAN_FILTER__H__
