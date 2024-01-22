@@ -9,162 +9,172 @@
 #ifndef __KALMAN_FILTER__H__
 #define __KALMAN_FILTER__H__
 
-
 #include <Eigen/Eigen>
 #include <utility>
 #include <fmt/core.h>
 
-namespace kf {
+namespace kf
+{
 
-class KalmanFilter {
-    public:
-        /**
-         * Create a Kalman filter with the specified matrices.
-         *   A - System dynamics matrix
-         *   H - Measurement matrix
-         *   Q - Process noise covariance
-         *   R - Measurement noise covariance
-         *   P - Estimate error covariance
-         */
-      KalmanFilter(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd H,
-                   Eigen::MatrixXd Q, Eigen::MatrixXd R, const Eigen::MatrixXd &P)
-            : A_(std::move(A)), B_(std::move(B)), H_(std::move(H)),
-              l_(B_.cols()), m_(H_.rows()), n_(A_.rows()),
-              P_(P), P0_(P), Q_(std::move(Q)), R_(std::move(R))
-        {
-            K_.resize(n_, m_);
-            I_.resize(n_, n_);
+class KalmanFilter
+{
+public:
+    /**
+     * Create a Kalman filter with the specified matrices.
+     *   A - System dynamics matrix
+     *   H - Measurement matrix
+     *   Q - Process noise covariance
+     *   R - Measurement noise covariance
+     *   P - Estimate error covariance
+     */
+    KalmanFilter(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd H, Eigen::MatrixXd Q,
+                 Eigen::MatrixXd R, const Eigen::MatrixXd &P)
+        : A(std::move(A)), B(std::move(B)), H(std::move(H)), l(B.cols()), m(H.rows()), n(A.rows()),
+          P(P), P0(P), Q(std::move(Q)), R(std::move(R))
+    {
+        K.resize(n, m);
+        I.resize(n, n);
+        S.resize(m, m);
 
-            P_.resize(n_, n_);
-            S_.resize(m_, m_);
+        x_pred.resize(n);
+        x_est.resize(n);
+        u.resize(l);
 
-            x_pred_.resize(n_);
-            x_est_.resize(n_);
-            u_.resize(l_);
+        K.setZero();
+        I.setIdentity();
+        S.setIdentity();
+    }
 
-            K_.setZero();
-            I_.setIdentity();
-
-            S_.setIdentity();
+    void init(const Eigen::VectorXd &x0)
+    {
+        if (x0.size() != x_est.size()) {
+            throw std::length_error(
+                fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
         }
+        x_est = x0;
+        P = P0;
+    }
 
-        void init(const Eigen::VectorXd &x0) {
-            if (x0.size() != x_est_.size()) {
-                throw std::length_error(fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
-            }
-            x_est_ = x0;
-            P_ = P0_;
+    void init()
+    {
+        x_est.setZero();
+        P = P0;
+    }
+
+    void setEstimate(const Eigen::VectorXd &x_est)
+    {
+        if (x_est.size() != this->x_est.size()) {
+            throw std::length_error(
+                fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
         }
+        this->x_est = x_est;
+    }
 
-        void init() {
-            x_est_.setZero();
-            P_ = P0_;
+    void setInput(const Eigen::VectorXd &u)
+    {
+        if (u.size() != this->u.size()) {
+            throw std::length_error(
+                fmt::format("Incorrect dimensions of input vector in {}", __func__));
         }
+        this->u = u;
+    }
 
-        void setEstimate(const Eigen::VectorXd & x_est) {
-            if (x_est.size() != x_est_.size()) {
-                throw std::length_error(fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
-            }
-            x_est_ = x_est;
+    void setEstimateCovariance(const Eigen::MatrixXd &P)
+    {
+        if (P.size() != this->P.size()) {
+            throw std::length_error(
+                fmt::format("Incorrect dimensions of estimate cov. matrix in {}", __func__));
         }
+        this->P = P;
+    }
 
-        void setInput(const Eigen::VectorXd& u) {
-            if (u.size() != u_.size()) {
-                throw std::length_error(fmt::format("Incorrect dimensions of input vector in {}", __func__));
-            }
-            u_ = u;
+    void setProcessCovariance(const Eigen::MatrixXd &Q)
+    {
+        if (Q.size() != this->Q.size()) {
+            throw std::length_error(
+                fmt::format("Incorrect dimensions of process cov. matrix in {}", __func__));
         }
+        this->Q = Q;
+    }
 
-        void setEstimateCovariance(const Eigen::MatrixXd& P) {
-            if (P.size() != P_.size()) {
-                throw std::length_error(fmt::format("Incorrect dimensions of estimate cov. matrix in {}", __func__));
-            }
-            P_ = P;
-        }
+    /** @brief Estimate covariance matrix getter
+     *
+     * @returns the current estimate covariance matrix P
+     */
+    const Eigen::MatrixXd &getEstimateCovariance() const { return P; }
 
-        void setProcessCovariance(const Eigen::MatrixXd& Q) {
-            if (Q.size() != Q_.size()) {
-                throw std::length_error(fmt::format("Incorrect dimensions of process cov. matrix in {}", __func__));
-            }
-            Q_ = Q;
-        }
+    /** @brief Innovation covariance matrix getter
+     *
+     * Innovation covariance matrix is calculated during correction step
+     * S = H * P * trans(H) + R.
+     *
+     * @returns the current innovation covariance matrix S
+     */
+    const Eigen::MatrixXd &getInnovationCovariance() const { return S; }
 
-        /** @brief Estimate covariance matrix getter
-         *
-         * @returns the current estimate covariance matrix P
-         */
-        const Eigen::MatrixXd& getEstimateCovariance() const { return P_; }
+    const Eigen::VectorXd &getPredict() const { return x_pred; };
+    const Eigen::VectorXd &getEstimate() const { return x_est; };
 
+    /** @brief Performs the KF prediction step
+     *
+     * Calculates the state predicted from the model and updates the estimate
+     * error covariance matrix.
+     */
+    void predict()
+    {
+        x_pred = A * x_est + B * u;
+        P = A * P * A.transpose() + Q;
+        // prepare for 'update'
+        S = H * P * H.transpose() + R;
+    }
 
-        /** @brief Innovation covariance matrix getter
-         *
-         * Innovation covariance matrix is calculated during correction step
-         * S = H * P * trans(H) + R.
-         *
-         * @returns the current innovation covariance matrix S
-         */
-        const Eigen::MatrixXd& getInnovationCovariance() const { return S_; }
+    void predict(const Eigen::VectorXd &u)
+    {
+        setInput(u);
+        predict();
+    }
 
-        const Eigen::VectorXd& getPredict() const { return x_pred_; };
-        const Eigen::VectorXd& getEstimate() const { return x_est_; };
+    /** @brief Performs the KF correction step
+     *
+     * Calculates the new Kalman gain, corrects the state prediction to obtain new
+     * state estimate, and updates estimate error covariance as well as innovation
+     * covariance.
+     */
+    void update(const Eigen::VectorXd &z)
+    {
+        K = P * H.transpose() * S.inverse();
+        x_est = x_pred + K * (z - H * x_pred);
+        P = (I - K * H) * P;
+    }
 
-        /** @brief Performs the KF prediction step
-         *
-         * Calculates the state predicted from the model and updates the estimate
-         * error covariance matrix.
-         */
-        void predict() {
-            x_pred_ = A_ * x_est_ + B_ * u_;
-            P_ = A_ * P_ * A_.transpose() + Q_;
-            // prepare for 'update'
-            S_ = H_ * P_ * H_.transpose() + R_;
-        }
+protected:
+    // Matrices for computation
+    Eigen::MatrixXd A, B, H;
 
-        void predict(const Eigen::VectorXd& u) {
-            setInput(u);
-            predict();
-        }
+    size_t l; // dimension of input vector. Can be zero for autonomous system.
+    size_t m; // dimension of output vector. Can be zero for prediction only.
+    size_t n; // dimension of state vector
 
-        /** @brief Performs the KF correction step
-         *
-         * Calculates the new Kalman gain, corrects the state prediction to obtain new
-         * state estimate, and updates estimate error covariance as well as innovation
-         * covariance.
-         */
-        void update(const Eigen::VectorXd& z) {
-            K_ = P_ * H_.transpose() * S_.inverse();
-            x_est_ = x_pred_ + K_ * (z - H_ * x_pred_);
-            P_ = (I_ - K_ * H_) * P_;
-        }
+    // n-size identity
+    Eigen::MatrixXd I;
 
-    private:
-        // Matrices for computation
-        Eigen::MatrixXd A_, B_, H_;
+    // Kalman gain matrix:
+    Eigen::MatrixXd K; /* n x m */
 
-        size_t l_; // dimension of input vector. Can be zero for autonomous system.
-        size_t m_; // dimension of output vector. Can be zero for prediction only.
-        size_t n_; // dimension of state vector
+    // Covariance matrices:
+    Eigen::MatrixXd P;  // estimate, n x n
+    Eigen::MatrixXd P0; // initial estimate value, n x n
+    Eigen::MatrixXd Q;  // process noise, n x n
+    Eigen::MatrixXd R;  // measurement noise, m x m
+    Eigen::MatrixXd S;  // innovation, m x m
 
-        // n-size identity
-        Eigen::MatrixXd I_;
+    // input vector
+    Eigen::VectorXd u;
 
-        // Kalman gain matrix:
-        Eigen::MatrixXd K_;     /* n x m */
-
-        // Covariance matrices:
-        Eigen::MatrixXd P_; // estimate, n x n
-        Eigen::MatrixXd P0_; // initial estimate value, n x n
-        Eigen::MatrixXd Q_; // process noise, n x n
-        Eigen::MatrixXd R_; // measurement noise, m x m
-        Eigen::MatrixXd S_; // innovation, m x m
-
-        // input vector
-        Eigen::VectorXd u_;
-
-        // Estimated states
-        Eigen::VectorXd x_pred_, x_est_;
+    // Estimated states
+    Eigen::VectorXd x_pred, x_est;
 };
 
-}  // namespace kf
+} // namespace kf
 
-#endif  //!__KALMAN_FILTER__H__
+#endif //!__KALMAN_FILTER__H__

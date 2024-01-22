@@ -22,8 +22,8 @@ constexpr double SIMULATION_TIME = 10; // The time of simulation is 10 s
 constexpr int N = static_cast<int>(SIMULATION_TIME / SYSTEM_DT); // simulation duration
 constexpr int M = static_cast<int>(MEASUREMENT_DT / SYSTEM_DT);  // measurement duration
 
-int main([[maybe_unused]]int argc,
-         [[maybe_unused]]char *argv[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+{
 
     // Buffers for plots
     std::vector<double> time(N);
@@ -92,7 +92,8 @@ int main([[maybe_unused]]int argc,
         // New measurement comes once every M samples of the system
         if (i % M == 1) {
             measured_pos[i] = true_pos[i] + measurement_noise(generator);
-        } else {
+        }
+        else {
             measured_pos[i] = measured_pos[i - 1];
         }
         z(0) = measured_pos[i];
@@ -113,7 +114,9 @@ int main([[maybe_unused]]int argc,
     plt::named_plot("Measure", time, measured_pos, "-");
     plt::named_plot("Estimate", time, estimated_pos, "-");
     plt::legend();
-    plt::grid(true, {{"linestyle", "--"}});
+    plt::grid(true, {
+                        {"linestyle", "--"}
+    });
     plt::xlim(0.0, SIMULATION_TIME - SYSTEM_DT);
     plt::save("assets/kalman_filter_const_model.png");
     plt::show();

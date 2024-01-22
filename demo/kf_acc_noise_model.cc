@@ -24,8 +24,8 @@ constexpr double SIMULATION_TIME = 10; // The time of simulation is 10 s
 constexpr int N = static_cast<int>(SIMULATION_TIME / SYSTEM_DT); // simulation duration
 constexpr int M = static_cast<int>(MEASUREMENT_DT / SYSTEM_DT);  // measurement duration
 
-int main([[maybe_unused]]int argc,
-         [[maybe_unused]]char *argv[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
+{
 
     // Buffers for plots
     std::vector<double> time(N);
@@ -132,21 +132,23 @@ int main([[maybe_unused]]int argc,
 
             true_vel_v[i] = 0.3;
             true_pos_v[i] = 3.0;
-        } else {
+        }
+        else {
             true_vel_u[i] = true_vel_u[i - 1] + process_noise(generator) * SYSTEM_DT;
-            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * SYSTEM_DT +
-                            0.5 * process_noise(generator) * dt_2;
+            true_pos_u[i] = true_pos_u[i - 1] + true_vel_u[i] * SYSTEM_DT
+                            + 0.5 * process_noise(generator) * dt_2;
 
             true_vel_v[i] = true_vel_v[i - 1] + process_noise(generator) * SYSTEM_DT;
-            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * SYSTEM_DT +
-                            0.5 * process_noise(generator) * dt_2;
+            true_pos_v[i] = true_pos_v[i - 1] + true_vel_v[i] * SYSTEM_DT
+                            + 0.5 * process_noise(generator) * dt_2;
         }
 
         // New measurement comes once every M samples of the system
         if (i % M == 1) {
             measured_pos_u[i] = true_pos_u[i] + measurement_noise(generator);
             measured_pos_v[i] = true_pos_v[i] + measurement_noise(generator);
-        } else {
+        }
+        else {
             measured_pos_u[i] = measured_pos_u[i - 1];
             measured_pos_v[i] = measured_pos_v[i - 1];
         }
@@ -187,7 +189,9 @@ int main([[maybe_unused]]int argc,
     plt::named_plot("Measure: v", time, measured_pos_v, "-");
     plt::named_plot("Estimate: v", time, estimated_pos_v, "-");
     plt::legend();
-    plt::grid(true, {{"linestyle", "--"}});
+    plt::grid(true, {
+                        {"linestyle", "--"}
+    });
     plt::xlim(0.0, SIMULATION_TIME - SYSTEM_DT);
     plt::save("assets/kalman_filter_acc_noise_model_chi-square.png");
     plt::show();
