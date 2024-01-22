@@ -27,13 +27,13 @@ public:
      *   R - Measurement noise covariance
      *   P - Estimate error covariance
      */
-    KalmanFilter(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd H, Eigen::MatrixXd Q,
-                 Eigen::MatrixXd R, const Eigen::MatrixXd &P)
-        : A(std::move(A)), B(std::move(B)), H(std::move(H)), l(B.cols()), m(H.rows()), n(A.rows()),
-          P(P), P0(P), Q(std::move(Q)), R(std::move(R))
+    KalmanFilter(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &H,
+                 const Eigen::MatrixXd &Q, const Eigen::MatrixXd &R)
+        : A(A), B(B), H(H), l(B.cols()), m(H.rows()), n(A.rows()), Q(Q), R(R)
     {
         K.resize(n, m);
         I.resize(n, n);
+        P.resize(n, n);
         S.resize(m, m);
 
         x_pred.resize(n);
@@ -42,23 +42,8 @@ public:
 
         K.setZero();
         I.setIdentity();
+        P.setIdentity();
         S.setIdentity();
-    }
-
-    void init(const Eigen::VectorXd &x0)
-    {
-        if (x0.size() != x_est.size()) {
-            throw std::length_error(
-                fmt::format("Incorrect dimensions of estimated state vector in {}", __func__));
-        }
-        x_est = x0;
-        P = P0;
-    }
-
-    void init()
-    {
-        x_est.setZero();
-        P = P0;
     }
 
     void setEstimate(const Eigen::VectorXd &x_est)
@@ -162,11 +147,10 @@ protected:
     Eigen::MatrixXd K; /* n x m */
 
     // Covariance matrices:
-    Eigen::MatrixXd P;  // estimate, n x n
-    Eigen::MatrixXd P0; // initial estimate value, n x n
-    Eigen::MatrixXd Q;  // process noise, n x n
-    Eigen::MatrixXd R;  // measurement noise, m x m
-    Eigen::MatrixXd S;  // innovation, m x m
+    Eigen::MatrixXd P; // estimate, n x n
+    Eigen::MatrixXd Q; // process noise, n x n
+    Eigen::MatrixXd R; // measurement noise, m x m
+    Eigen::MatrixXd S; // innovation, m x m
 
     // input vector
     Eigen::VectorXd u;

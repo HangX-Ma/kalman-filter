@@ -102,8 +102,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
          0, 0;
 
     // clang-format on
-    kf::KalmanFilter filter(A, B, H, Q, R, P0);
-    filter.init();
+    kf::KalmanFilter filter(A, B, H, Q, R);
 
     // Initial values (unknown by KF)
     time[0] = 0.0;

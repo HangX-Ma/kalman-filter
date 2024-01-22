@@ -104,3 +104,12 @@ target_include_directories(kf_acc_noise_model
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
 )
+
+add_executable(kf_vel_model ${CMAKE_SOURCE_DIR}/demo/kf_vel_model.cc kalman_filter.h)
+target_link_libraries(kf_vel_model PRIVATE matplotlib_cpp fmt::fmt Eigen3::Eigen)
+target_include_directories(kf_vel_model
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/library/matplotlib-cpp
+)
+

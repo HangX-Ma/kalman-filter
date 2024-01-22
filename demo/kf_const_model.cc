@@ -66,12 +66,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
     Eigen::MatrixXd R(1, 1); /* 1x1 */
     R << 1.0;
 
-    Eigen::Matrix2d P0;
-    P0.setIdentity();
     // clang-format on
-
-    kf::KalmanFilter filter(A, B, H, Q, R, P0);
-    filter.init();
+    kf::KalmanFilter filter(A, B, H, Q, R);
 
     // Initial values (unknown by KF)
     time[0] = 0.0;
